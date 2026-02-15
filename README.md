@@ -35,61 +35,37 @@ Before you begin, ensure you have met the following requirements:
 
 ## Environment Setup
 
-This project requires certain environment variables to be set up. Create a `.env.local` file in the root of the project.
+This project uses a local `.env.local` file for development and expects equivalent environment variables to be configured in your Vercel project settings for deployment.
 
-### Core Next.js Application Variables:
-
-These are essential for running the Next.js application and connecting to Supabase from both client and server components:
+Create a `.env.local` file in the project root (do not commit it). Example values (replace placeholders):
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+# Public (safe for client-side usage)
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Server-only (keep secret; set in Vercel as environment variables)
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+SUPABASE_JWT_SECRET=your_jwt_secret_here
 ```
 
-Replace `your_supabase_url_here` and `your_supabase_anon_key_here` with your actual Supabase project URL and public anon key.
-
-### Additional Server-Side / Database Variables:
-
-These variables might be required for direct database access (e.g., migrations, seeding, scripts), specific server-side Supabase admin operations, or custom JWT handling. They are typically not needed for running the basic Next.js development server for UI work, but would be necessary for full backend functionality or if the project has separate backend services/scripts interacting with the database directly.
-
-```env
-# Supabase server-side settings
-SUPABASE_URL=your_supabase_url_here # Often same as NEXT_PUBLIC_SUPABASE_URL
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here # For admin operations, keep this secure
-SUPABASE_JWT_SECRET=your_supabase_jwt_secret_here # For custom JWT handling
-
-# Direct PostgreSQL connection (if used outside Supabase client or for specific tools)
-POSTGRES_URL="your_postgres_connection_string_here"
-POSTGRES_USER="your_postgres_user_here"
-POSTGRES_HOST="your_postgres_host_here"
-POSTGRES_PASSWORD="your_postgres_password_here"
-POSTGRES_DATABASE="your_postgres_database_name_here"
-POSTGRES_PRISMA_URL="your_postgres_connection_string_for_prisma_here" # If using Prisma
-POSTGRES_URL_NON_POOLING="your_postgres_non_pooling_connection_string_here" # Alternative connection string
-```
-
-**Important Security Notes:**
-
-- Always replace placeholder values with your actual credentials.
-- **Never commit your `.env.local` file or files containing sensitive keys (like `SUPABASE_SERVICE_ROLE_KEY` or database passwords) to your Git repository.** Ensure `.env.local` is listed in your `.gitignore` file.
-- For production deployments, use your hosting provider's system for managing environment variables securely.
+Notes:
+- `NEXT_PUBLIC_SUPABASE_URL` must be the public HTTP URL for your Supabase project, e.g. `https://qlzywewadamjrticvtkm.supabase.co` — not a Postgres connection string.
+- Do NOT expose secret keys (service role, DB credentials) to the browser; set them only in your hosting provider (Vercel) as **Environment Variables**.
+- The repository previously contained a `.env` file template which has been removed; use `.env.local` locally and Vercel settings for production.
 
 ## Database Setup
 
-For the application to function correctly, you need to set up the database schema in your Supabase project.
+I've added a consolidated schema file `supabase_schema.sql` in the repository root that creates all required tables (`exercises`, `workouts`, `metrics`, `workout_templates`), triggers, and indexes.
 
-1.  **Navigate to the SQL Editor** in your Supabase project dashboard.
-2.  **Open the `new_exercises_table.sql` file** located in the root of this repository.
-3.  **Copy the entire content** of this SQL file.
-4.  **Paste it into the Supabase SQL Editor and run the query.**
+To create the schema in your Supabase project:
 
-This script will:
-_ Create the `exercises` table with the required columns and constraints.
-_ Set up Row Level Security (RLS) policies for data access.
-_ Create a trigger to automatically update modification timestamps.
-_ Insert some preset exercises into the table.
+1. Open your Supabase project → SQL Editor.
+2. Open `supabase_schema.sql` from this repo or copy the contents.
+3. Paste and run the script. (This creates tables and triggers; seed inserts are commented out.)
 
-**Note:** If your project uses other database tables, functions, or triggers, ensure you have the corresponding SQL scripts and run them in your Supabase SQL Editor as well. The `new_exercises_table.sql` file only covers the schema for exercises.
+If you only want the exercises table, you can still use `new_exercises_table.sql`.
 
 ## Running the Project
 
@@ -136,4 +112,30 @@ You can run these scripts using `npm run <script-name>`. For example, `npm run l
 
 ---
 
-This README provides a basic guide to get the `fittrackr` project up and running.
+## Troubleshooting npm install
+
+- If `npm install` fails with permission errors on Windows while the project is inside OneDrive, pause OneDrive sync or move the project outside OneDrive (e.g., `C:\projects\fitness-tracker`).
+- If you see `ECONNRESET` or network errors, try:
+
+```powershell
+npm cache clean --force
+npm cache verify
+npm config set registry https://registry.npmjs.org/
+npm config delete proxy
+npm config delete https-proxy
+npm config set fetch-timeout 600000
+npm config set fetch-retries 5
+npm install --legacy-peer-deps
+```
+
+## Deployment (Vercel)
+
+- In Vercel set these environment variables for the appropriate environment (Preview/Production):
+    - `NEXT_PUBLIC_SUPABASE_URL` (public URL)
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon public key)
+    - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
+    - `SUPABASE_JWT_SECRET` (server-only)
+
+---
+
+This README provides a concise guide to get the `fittrackr` project up and running.
