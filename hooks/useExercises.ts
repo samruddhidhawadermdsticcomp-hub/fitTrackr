@@ -87,7 +87,7 @@ export function useExercises() {
             ...exerciseData,
             user_id: user.id,
             is_preset: false, // Explicitly set for user-created exercises
-          })
+          } as ExerciseInsert)
           .select()
           .single();
 

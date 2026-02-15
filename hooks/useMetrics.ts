@@ -72,7 +72,7 @@ export function useMetrics() {
     try {
       const { data, error } = await supabaseClient
         .from('metrics')
-        .insert(metric)
+        .insert(metric as MetricInsert)
         .select()
         .single();
 
